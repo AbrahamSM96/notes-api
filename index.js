@@ -10,6 +10,7 @@ const notFound = require('./middleware/notFound.js')
 const handleErrors = require('./middleware/handleErrors.js')
 const usersRouter = require('./controllers/users')
 const notesRouter = require('./controllers/notes')
+const loginRouter = require('./controllers/login')
 
 app.use(cors())
 app.use(express.json())
@@ -32,6 +33,7 @@ app.get('/', (request, response) => {
 })
 
 // Ahora los controllers para hacer el index mas legible
+app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/notes', notesRouter)
 

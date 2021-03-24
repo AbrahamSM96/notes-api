@@ -1,8 +1,14 @@
 const notesRouter = require('express').Router()
 const Note = require('../models/Note')
+const User = require('../models/User')
+
+const userExtractor = require('../middleware/userExtractor')
 
 notesRouter.get('/', async (request, response) => {
-  const notes = await Note.find({})
+  const notes = await Note.find({}).populate('user', {
+    username: 1,
+    name: 1
+  })
   response.json(notes)
 })
 
@@ -22,30 +28,38 @@ notesRouter.get('/:id', (request, response, next) => {
     })
 })
 
-notesRouter.post('/', async (request, response, next) => {
-  const note = request.body
+notesRouter.post('/', userExtractor, async (request, response, next) => {
+  const { content, important } = request.body
+  const { userId } = request
+  // obtenemos el id del request notes para buscar el user
+  const user = await User.findById(userId)
 
-  if (!note.content) {
+  if (!content) {
     return response.status(400).json({
       error: 'required "content" field is missing'
     })
   }
 
   const newNote = new Note({
-    content: note.content,
+    content: content,
     date: new Date(),
-    important: note.important || false
+    important: important || false,
+    user: user._id
   })
 
   try {
     const savedNote = await newNote.save()
+    // En el modelo User concatenamos el id de la nueva nota
+    user.notes = user.notes.concat(savedNote._id)
+    await user.save()
+
     response.json(savedNote)
   } catch (error) {
     next(error)
   }
 })
 
-notesRouter.put('/:id', (request, response, next) => {
+notesRouter.put('/:id', userExtractor, (request, response, next) => {
   const { id } = request.params
   const note = request.body
 
@@ -61,7 +75,7 @@ notesRouter.put('/:id', (request, response, next) => {
     .catch((err) => next(err))
 })
 
-notesRouter.delete('/:id', async (request, response, next) => {
+notesRouter.delete('/:id', userExtractor, async (request, response, next) => {
   const { id } = request.params
 
   try {
