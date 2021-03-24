@@ -1,9 +1,9 @@
 # Backend app notes
 
 **Init the project**
-**npm i**
+-npm install
 
-**Tools in this project:**
+**Tools used in this project:**
 
 - Express
 - MongoDB
